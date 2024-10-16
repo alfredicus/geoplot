@@ -8,6 +8,7 @@
     "mohr": "http-server . -p 8001 -o /examples/index-mohr.html",
     "wulff": "http-server . -p 8001 -o /examples/index-wulff.html",
     "histogram": "http-server . -p 8001 -o /examples/index-histogram.html",
+    "domain": "http-server . -p 8001 -o /examples/index-stress-domain.html",
     "build": "webpack --mode production",
     "build:dev": "webpack --mode development",
     "__start__": "webpack serve --mode production"

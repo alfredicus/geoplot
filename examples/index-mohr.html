@@ -26,15 +26,172 @@
             margin-right: 10px;
         }
     </style>
-    <script src="../lib/mohr3D.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+    <script src="/dist/geoplot.js"></script>
 </head>
 
 <body>
     <h1>Cercle de Mohr</h1>
     <div id="mohr-circle"></div>
     <div id="sliders"></div>
+    <div id="tooltip"
+        style="position: absolute; display: none; background-color: white; border: 1px solid black; padding: 5px;">
+    </div>
 
     <script>
+        const geoplot = window['geoplot']
+
+        const options = {
+            div: "mohr-circle",
+
+            width: 600,
+            height: 400,
+
+            margin: { top: 140, right: 40, bottom: 40, left: 40 },
+
+            sigma1: 100,
+            sigma2: 60,
+            sigma3: 20
+        }
+
+        const mohr = new geoplot.MohrCircle(options)
+        const a = 1 / Math.sqrt(3)
+        let n = [a, a, a]
+        mohr.addNormal(n)
+
+        // Création des sliders
+        const sliderContainer = d3.select("#sliders")
+
+        // ----------------------------------------------------
+        // Gestion des événements des sliders sigma
+        // ----------------------------------------------------
+        const sigmaSliders = ["σ1", "σ2", "σ3"].map((label, i) => {
+            const container = sliderContainer.append("div").attr("class", "slider-container")
+            container.append("span").text(`${label}: `)
+            const input = container.append("input")
+                .attr("type", "range")
+                .attr("min", 0)
+                .attr("max", 200)
+                .attr("step", 1)
+                .attr("value", [options.sigma1, options.sigma2, options.sigma3][i])
+            const valueSpan = container.append("span").text([options.sigma1, options.sigma2, options.sigma3][i])
+            return { input, valueSpan, label }
+        })
+
+        sigmaSliders.forEach((slider, i) => {
+            slider.input.on("input", function () {
+                const newValue = +this.value
+
+                if (i === 0) { // sigma1
+                    options.sigma1 = newValue
+                    options.sigma2 = Math.min(options.sigma2, options.sigma1)
+                    options.sigma3 = Math.min(options.sigma3, options.sigma2)
+                } else if (i === 1) { // sigma2
+                    options.sigma2 = newValue
+                    options.sigma1 = Math.max(options.sigma1, options.sigma2);
+                    options.sigma3 = Math.min(options.sigma3, options.sigma2);
+                } else if (i === 2) { // sigma3
+                    options.sigma3 = newValue
+                    if (options.sigma3 > options.sigma2) {
+                        // If sigma3 exceeds sigma2, increase sigma2 to match sigma3
+                        options.sigma2 = options.sigma3
+                    }
+                    // Ensure sigma1 is still the largest
+                    options.sigma1 = Math.max(options.sigma1, options.sigma2)
+                }
+
+                updateSigmaValues()
+            })
+        })
+
+        // ----------------------------------------------------
+        // Gestion des événements des sliders des normales
+        // ----------------------------------------------------
+        const nSliders = ['n1', 'n2', 'n3'].map((label, i) => {
+            const container = sliderContainer.append("div").attr("class", "slider-container");
+            container.append("span").text(`${label}: `);
+            const input = container.append("input")
+                .attr("type", "range")
+                .attr("min", -1)
+                .attr("max", 1)
+                .attr("step", 0.01)
+                .attr("value", 1 / Math.sqrt(3));
+            const valueSpan = container.append("span").text((1 / Math.sqrt(3)).toFixed(2));
+            return { input, valueSpan };
+        });
+
+        function normalizeVector(n) {
+            const magnitude = Math.sqrt(n.reduce((sum, val) => sum + val * val, 0));
+            return n.map(val => val / magnitude);
+        }
+
+        function updateSliders(newN) {
+            nSliders.forEach((slider, i) => {
+                slider.input.property("value", newN[i]);
+                slider.valueSpan.text(newN[i].toFixed(2));
+            });
+        }
+
+        // Gestion des événements des sliders n
+        nSliders.forEach((slider, i) => {
+            slider.input.on("input", function () {
+                const value = +this.value;
+                n[i] = value;
+                n = normalizeVector(n);
+                updateSliders(n);
+                mohr.clearNormals();
+                mohr.addNormal(n);
+            });
+        });
+
+
+        // Add a manual update button for testing
+        sliderContainer.append("button")
+            .text("Manual Update")
+            .on("click", updateSigmaValues)
+
+        function updateSigmaValues() {
+            // Ensure sigma3 <= sigma2 <= sigma1
+            options.sigma1 = Math.max(options.sigma1, options.sigma2, options.sigma3)
+            options.sigma3 = Math.min(options.sigma1, options.sigma2, options.sigma3)
+            options.sigma2 = Math.max(options.sigma3, Math.min(options.sigma1, options.sigma2))
+
+            sigmaSliders.forEach((slider, i) => {
+                const value = [options.sigma1, options.sigma2, options.sigma3][i]
+                slider.input.property("value", value)
+                slider.valueSpan.text(value)
+            });
+
+            mohr.update()
+        }
+
+
+        // ----------------------------------------
+
+        /*
+        const tooltip = document.getElementById('tooltip');
+        const mohrCircle = document.getElementById('mohr-circle');
+
+        mohrCircle.addEventListener('mousemove', function (event) {
+            const point = document.elementFromPoint(event.clientX, event.clientY);
+            if (point && point.tagName === 'circle' && point.classList.contains('normal-point')) {
+                const n1 = point.getAttribute('data-n1');
+                const n2 = point.getAttribute('data-n2');
+                const n3 = point.getAttribute('data-n3');
+
+                tooltip.innerHTML = `Normal: (${n1}, ${n2}, ${n3})`;
+                tooltip.style.left = (event.pageX + 10) + 'px';
+                tooltip.style.top = (event.pageY + 10) + 'px';
+                tooltip.style.display = 'block';
+            } else {
+                tooltip.style.display = 'none';
+            }
+        });
+
+        mohrCircle.addEventListener('mouseleave', function () {
+            tooltip.style.display = 'none';
+        })
+        */
 
     </script>
 </body>

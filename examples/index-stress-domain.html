@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stress domain</title>
+    <style>
+        #visualization {
+            border: 5px solid #898989;
+        }
+
+        #colorSchemeSelect {
+            margin-top: 10px;
+        }
+    </style>
+    <script src="/dist/geoplot.js"></script>
+</head>
+
+<body>
+    <h1>Stress domain</h1>
+    <canvas id="visualization"></canvas>
+    <div>
+        <label for="colorSchemeSelect">Color table: </label>
+        <select id="colorSchemeSelect">
+            <option value="viridis">Viridis</option>
+            <option value="plasma">Plasma</option>
+            <option value="inferno">Inferno</option>
+            <option value="bw">Black & white</option>
+        </select>
+    </div>
+
+    <script>
+        const d = new geoplot.StressDomain('visualization', 500, 500)
+
+        const colorSchemeSelect = document.getElementById('colorSchemeSelect')
+        colorSchemeSelect.addEventListener('change', function () {
+            d.setColorTable(this.value)
+        })
+
+        // ------------------------------------------------
+
+        const rDivisions = 100
+        const thetaDivisions = 100
+        let data = []
+        let min = Number.POSITIVE_INFINITY
+        let max = Number.NEGATIVE_INFINITY
+        for (let i = 0; i <= rDivisions; i++) {
+            for (let j = 0; j <= thetaDivisions; j++) {
+                const R = (i / rDivisions) * 3
+                const theta = (j / thetaDivisions) * 180
+                const value = Math.sin(R / 6 * 12) + Math.cos(theta / 180 * 6)
+                data.push({
+                    R,
+                    theta,
+                    value
+                })
+                if (value < min) min = value
+                if (value > max) max = value
+            }
+        }
+
+        data = data.map(v => {
+            return { R: v.R, theta: v.theta, value: (v.value - min) / (max - min) }
+        })
+
+        d.setData(data, rDivisions, thetaDivisions)
+
+        // ------------------------------------------------
+
+        // Add specific points (circles)
+        d.addPoint(0.5, 60)
+        d.addPoint(1.5, 120)
+        d.addPoint(2.5, 30)
+    </script>
+</body>
+
+</html>

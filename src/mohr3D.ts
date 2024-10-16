@@ -4,31 +4,21 @@ export type Normal = [number, number, number]
 
 // TODO using an interface instead of a type
 export type MohrCircleOptions = {
+    div: string,
+
     width: 500,
     height: 500,
 
-    // TODO: rewrite using margin: { top: number; right: number; bottom: number; left: number }
-    top: 140,
-    right: 40,
-    bottom: 40,
-    left: 40,
+    margin?: {
+        top?: number
+        right?: number
+        bottom?: number
+        left?: number
+    }
 
-    div: string,
     sigma1: number,
     sigma2: number,
     sigma3: number
-}
-
-interface Margin {
-    top: number;
-    right: number;
-    bottom: number;
-    left: number;
-}
-
-interface StressPoint {
-    sigma_n: number;
-    tau: number;
 }
 
 /**
@@ -46,26 +36,25 @@ interface StressPoint {
  * ```
  */
 export class MohrCircle {
-    private svg_: d3.Selection<SVGSVGElement, unknown, HTMLElement, any>
-    private xScale: d3.ScaleLinear<number, number>
-    private yScale: d3.ScaleLinear<number, number>
-    private xAxis: d3.Axis<number | { valueOf(): number }>
-    private yAxis: d3.Axis<number | { valueOf(): number }>
-    private margin: Margin
-    private circleGroup: d3.Selection<SVGGElement, unknown, HTMLElement, any>
-
-    constructor(private params: MohrCircleOptions) {
-        const svg = d3.select(`#${params.div}`)
+    constructor(private options: MohrCircleOptions) {
+        const svg = d3.select(`#${options.div}`)
             .append("svg")
-            .attr("width", params.width)
-            .attr("height", params.height)
+            .attr("width", options.width)
+            .attr("height", options.height)
 
-        this.margin = { top: params.top, right: params.right, bottom: params.bottom, left: params.left }
+        this.svg_ = svg
+
+        this.margin = {
+            top: options.margin?.top ?? 20,
+            right: options.margin?.right ?? 20,
+            bottom: options.margin?.bottom ?? 20,
+            left: options.margin?.left ?? 20
+        }
 
         // Initial axes creation
         svg.append("g")
             .attr("class", "x-axis")
-            .attr("transform", `translate(0,${params.height / 2})`)
+            .attr("transform", `translate(0,${this.options.height / 2})`)
             .call(d3.axisBottom(d3.scaleLinear()))
 
         svg.append("g")
@@ -83,22 +72,30 @@ export class MohrCircle {
         this.yAxis = d3.axisBottom(this.yScale)
 
         // Initialization
-        this.setSigmas(params.sigma1, params.sigma2, params.sigma3)
-
-        this.svg_ = svg
+        this.setSigmas({
+            sigma1: this.options.sigma1,
+            sigma2: this.options.sigma2,
+            sigma3: this.options.sigma3
+        })
     }
 
-    public setSigmas(sigma1: number, sigma2: number, sigma3: number): void {
-        // Ensure sigma3 <= sigma2 <= sigma1
-        this.params.sigma1 = sigma1
-        this.params.sigma3 = sigma2
-        this.params.sigma2 = sigma3
+    public setSigmas({ sigma1, sigma2, sigma3 }: { sigma1: number, sigma2: number, sigma3: number }): void {
+        // TODO: Ensure sigma3 <= sigma2 <= sigma1
+        this.options.sigma1 = sigma1
+        this.options.sigma2 = sigma2
+        this.options.sigma3 = sigma3
 
         this.updateMohrCircles()
     }
 
+    public clearNormals() {
+        this.circleGroup.selectAll("*").remove()
+        this.normals = []
+        this.update()
+    }
+
     public addNormals(ns: Normal[]) {
-        ns.forEach( n => this.addNormal(n))
+        ns.forEach(n => this.addNormal(n))
     }
 
     public addNormal(n: Normal) {
@@ -106,14 +103,33 @@ export class MohrCircle {
 
         // Calculate and plot the point (σn, τ)
         const [n1, n2, n3] = normalizeVector(n[0], n[1], n[2])
+        this.normals.push([n1, n2, n3])
 
-        const { sigma_n, tau } = this.calculateStressPoint(n1, n2, n3);
+        this.drawNormals()
+    }
+
+    public update() {
+        this.updateMohrCircles()
+    }
+
+
+
+
+    // -----------------------------------------------
+
+    private drawNormals() {
+        this.normals.forEach(n => this.drawNormal(n))
+    }
+
+    private drawNormal(n: Normal) {
+        const { sigma_n, tau } = this.calculateStressPoint(n[0], n[1], n[2]);
 
         this.circleGroup.append("circle")
             .attr("cx", this.xScale(sigma_n))
             .attr("cy", this.yScale(tau))
             .attr("r", 5)
-            .attr("fill", "purple");
+            .attr("fill", "purple")
+            .attr("classList", "normal-point")
 
         this.circleGroup.append("text")
             .attr("x", this.xScale(sigma_n) + 10)
@@ -121,15 +137,16 @@ export class MohrCircle {
             .text(`(σn, τ)`)
             .attr("fill", "purple");
     }
-    // -----------------------------------------------
 
     private updateScales(): void {
-        const maxStress = Math.max(this.params.sigma1, this.params.sigma2, this.params.sigma3);
+        const o = this.options
+
+        const maxStress = Math.max(o.sigma1, o.sigma2, o.sigma3)
         const maxTau = maxStress / 2; // Maximum possible shear stress
 
         // Calculate the range to maintain aspect ratio
-        const xRange = this.params.width - this.margin.left - this.margin.right;
-        const yRange = this.params.height - this.margin.top - this.margin.bottom;
+        const xRange = o.width - this.margin.left - this.margin.right;
+        const yRange = o.height - this.margin.top - this.margin.bottom;
         const scale = Math.min(xRange / maxStress, yRange / (2 * maxTau));
 
         this.xScale = d3.scaleLinear()
@@ -160,9 +177,9 @@ export class MohrCircle {
 
         this.circleGroup.selectAll("*").remove();
 
-        const sigma1 = this.params.sigma1
-        const sigma2 = this.params.sigma2
-        const sigma3 = this.params.sigma3
+        const sigma1 = this.options.sigma1
+        const sigma2 = this.options.sigma2
+        const sigma3 = this.options.sigma3
 
         this.drawColoredArea(sigma1, sigma2, sigma3);
 
@@ -193,7 +210,9 @@ export class MohrCircle {
                 .attr("x", this.xScale([sigma1, sigma2, sigma3][i]))
                 .attr("y", this.yScale(0) + 20)
                 .text(label);
-        });
+        })
+
+        this.drawNormals()
     }
 
     // Modify the drawHalfCircle function
@@ -247,11 +266,22 @@ export class MohrCircle {
     }
 
     private calculateStressPoint(n1: number, n2: number, n3: number): StressPoint {
-        const sigma_n = this.params.sigma1 * n1 * n1 + this.params.sigma2 * n2 * n2 + this.params.sigma3 * n3 * n3
-        const sigma_squared = (this.params.sigma1 * n1) ** 2 + (this.params.sigma2 * n2) ** 2 + (this.params.sigma3 * n3) ** 2
+        const sigma_n = this.options.sigma1 * n1 * n1 + this.options.sigma2 * n2 * n2 + this.options.sigma3 * n3 * n3
+        const sigma_squared = (this.options.sigma1 * n1) ** 2 + (this.options.sigma2 * n2) ** 2 + (this.options.sigma3 * n3) ** 2
         const tau = Math.sqrt(sigma_squared - sigma_n ** 2)
         return { sigma_n, tau }
     }
+
+    // --------------------------------------------
+
+    private svg_: d3.Selection<SVGSVGElement, unknown, HTMLElement, any>
+    private xScale: d3.ScaleLinear<number, number>
+    private yScale: d3.ScaleLinear<number, number>
+    private xAxis: d3.Axis<number | { valueOf(): number }>
+    private yAxis: d3.Axis<number | { valueOf(): number }>
+    private margin: Margin
+    private circleGroup: d3.Selection<SVGGElement, unknown, HTMLElement, any>
+    private normals: Normal[] = []
 }
 
 function normalizeVector(n1: number, n2: number, n3: number): [number, number, number] {
@@ -259,7 +289,17 @@ function normalizeVector(n1: number, n2: number, n3: number): [number, number, n
     return [n1 / magnitude, n2 / magnitude, n3 / magnitude]
 }
 
+interface Margin {
+    top: number;
+    right: number;
+    bottom: number;
+    left: number;
+}
 
+interface StressPoint {
+    sigma_n: number;
+    tau: number;
+}
 
 
 
