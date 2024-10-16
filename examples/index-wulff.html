@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wulff Diagram</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/systemjs/dist/system.js"></script>
+    <style>
+        #wulff-canvas {
+            width: 100%;
+            height: 600px;
+        }
+
+        .tooltip {
+            position: absolute;
+            text-align: center;
+            padding: 8px;
+            font: 12px sans-serif;
+            background: lightsteelblue;
+            border: 0px;
+            border-radius: 8px;
+            pointer-events: none;
+        }
+    </style>
+    <script src="/dist/geoplot.js"></script>
+</head>
+
+<body>
+    <div id="wulff-canvas"></div>
+    <div>
+        <br/><br/><br/><br/>
+        <button id="add-circle">Add Random Great Circle</button>
+        <p>Shift + Click to select multiple circles</p>
+        <p>Alt + Click to delete a circle (win)</p>
+        <p>Opt + Click to delete a circle (mac)</p>
+        <p>Esc to discard the selection</p>
+    </div>
+
+    <script>
+        const geoplot = window["geoplot"]
+
+        const options = {
+            width: 600,
+            height: 600,
+            margin: { top: 50, right: 50, bottom: 50, left: 50 },
+            drawAxes: false,
+            drawLabels: true,
+            interactivity: true
+        };
+
+        const wulff = new geoplot.Wulff('#wulff-canvas', options)
+
+        // Add some initial great circles
+        wulff.addGreatCircle(30, 45, 'red');
+        wulff.addGreatCircle(120, 60, 'blue');
+        wulff.addGreatCircle(210, 30, 'green');
+
+        // Add random great circle on button click
+        document.getElementById('add-circle').addEventListener('click', () => {
+            const strike = Math.random() * 360;
+            const dip = Math.random() * 90;
+            const color = `rgb(${Math.random() * 255},${Math.random() * 255},${Math.random() * 255})`;
+            wulff.addGreatCircle(strike, dip, color);
+        });
+    </script>
+</body>
+
+</html>

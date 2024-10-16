@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Angular Difference Histogram</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/systemjs/dist/system.js"></script>
+    <style>
+        #histogram-canvas {
+            width: 100%;
+            height: 600px;
+        }
+        .bar {
+            fill: steelblue;
+        }
+        .bar-label {
+            fill: white;
+            font-size: 12px;
+            text-anchor: middle;
+        }
+        .axis-label {
+            font-size: 14px;
+            font-weight: bold;
+        }
+    </style>
+    <script src="/dist/geoplot.js"></script>
+</head>
+<body>
+    <div id="histogram-canvas"></div>
+    <div>
+        <br/><br/><br/><br/>
+        <button id="regenerate-data">Regenerate Data</button>
+    </div>
+    <script>
+        const geoplot = window["geoplot"]
+        
+        const options = {
+            container: "#histogram-canvas",
+            width: 800,
+            height: 400,
+            margin: {top: 40, right: 30, bottom: 50, left: 60},
+            binSize: 30
+        };
+
+        function generateData() {
+            return Array.from({length: 100}, (_, i) => ({
+                id: i + 1,
+                angle: Math.random() * 360 - 180
+            }));
+        }
+
+        let data = generateData();
+        const histogramInstance = new geoplot.Histogram(data, options);
+        histogramInstance.render();
+
+        // Regenerate data and redraw histogram on button click
+        document.getElementById('regenerate-data').addEventListener('click', () => {
+            data = generateData();
+            histogramInstance.updateData(data);
+            // histogramInstance.render();
+        });
+    </script>
+</body>
+</html>
