@@ -7,6 +7,8 @@ Plotting tools for geologists based on [d3.js](https://d3js.org/)
     <img src="media/histogram.png" alt="drawing" width="300"/>
     <img src="media/mohr.png" alt="drawing" width="200"/>
     <img src="media/stress-domain.png" alt="drawing" width="200"/>
+    <img src="media/rose-diagram.png" alt="drawing" width="200"/>
+    <img src="media/table.png" alt="drawing" width="200"/>
 </center>
 
 ## Interactive tools
@@ -36,4 +38,18 @@ node run histogram
 Launch it with the command
 ```bash
 node run domain
+```
+
+### Rose diagram
+
+Launch it with the command
+```bash
+node run rose
+```
+
+### Table
+
+Launch it with the command
+```bash
+node run table
 ```

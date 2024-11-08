@@ -1,6 +1,6 @@
 import * as d3 from 'd3';
 
-export interface DataPoint {
+export interface HistoDataPoint {
     id: number;
     angle: number;
 }
@@ -38,10 +38,10 @@ export class Histogram {
     private svg: d3.Selection<SVGGElement, unknown, HTMLElement, any>;
     private width: number;
     private height: number;
-    private data: DataPoint[];
+    private data: HistoDataPoint[];
     private options: HistogramOptions;
 
-    constructor(data: DataPoint[], options: HistogramOptions) {
+    constructor(data: HistoDataPoint[], options: HistogramOptions) {
         this.data = data;
         this.options = options;
         this.options.showLabels = options.showLabels ?? true
@@ -57,7 +57,7 @@ export class Histogram {
             .attr("transform", `translate(${options.margin.left},${options.margin.top})`);
     }
 
-    public updateData(data: DataPoint[]) {
+    public updateData(data: HistoDataPoint[]) {
         this.data = data
         this.render()
     }
@@ -68,7 +68,7 @@ export class Histogram {
         this.svg.selectAll("text").remove()
         this.svg.selectAll(".bar-label").remove()
 
-        const histogram = d3.histogram<DataPoint, number>()
+        const histogram = d3.histogram<HistoDataPoint, number>()
             .value(d => d.angle)
             .domain(d3.extent(this.data, d => d.angle) as [number, number])
             .thresholds(d3.range(-180, 181, this.options.binSize));
@@ -88,7 +88,7 @@ export class Histogram {
         this.drawLabels();
     }
 
-    private drawBars(bins: d3.Bin<DataPoint, number>[], x: d3.ScaleLinear<number, number, never>, y: d3.ScaleLinear<number, number, never>): void {
+    private drawBars(bins: d3.Bin<HistoDataPoint, number>[], x: d3.ScaleLinear<number, number, never>, y: d3.ScaleLinear<number, number, never>): void {
         this.svg.selectAll("rect")
             .data(bins)
             .enter()
@@ -138,7 +138,7 @@ export class Histogram {
             .text("Number of Data Points");
     }
 
-    private wrap(text: d3.Selection<SVGTextElement, d3.Bin<DataPoint, number>, SVGGElement, unknown>, width: number): void {
+    private wrap(text: d3.Selection<SVGTextElement, d3.Bin<HistoDataPoint, number>, SVGGElement, unknown>, width: number): void {
         text.each(function () {
             let text = d3.select(this),
                 words = text.text().split(/,\s*/).reverse(),

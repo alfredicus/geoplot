@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Rose diagram</title>
+    <style>
+        * {
+            font-family: sans-serif;
+            font-size: 1rem;
+            margin-bottom: 10px;
+            margin-right: 10px;
+        }
+
+        label {
+            padding-right: 3px;
+        }
+
+        select {
+            font-size: 0.9rem;
+            padding: 2px 5px;
+        }
+
+        button:hover {
+            background-color: rgb(148, 144, 144);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="top-1 start-1" style="position: absolute; opacity: 100%; left: 10px; top: 10px">
+        <div id="rose" class="card" style="
+                    width: 400px;
+                    height: 400px;
+                    /* background-color: rgb(193, 193, 193); */
+                "></div>
+    </div>
+
+    <div class="top-1 start-1" style="position: absolute; opacity: 100%; left: 415px; top: 10px">
+        <div id="rose" class="card" style="
+                    width: 340px;
+                    height: 280px;
+                    background-color: rgb(193, 193, 193);
+                    border-style: solid;
+                    border-color: black;
+                    border-radius: 5px;
+                    padding: 5px;
+                ">
+            <button id="upload">Upload</button>
+            <label for="selection">Selection</label>
+            <select name="selection" id="selection">
+            </select>
+            <hr class="rounded">
+
+            <label for="angle">Bin angle</label>
+            <select name="angle" id="angle">
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="5">5</option>
+                <option value="6">6</option>
+                <option selected="selected">10</option>
+                <option value="15">15</option>
+                <option value="30">30</option>
+            </select>
+            <span style="position: relative; top: 3px;">
+                <input type="color" name="color" value="#FF0000" id="bins-color"></input><br />
+            </span>
+
+            <input type="checkbox" name="checkbox" id="show-lines" checked>Show lines</input>
+            <input type="color" name="color" value="#000000" id="lines-color"></input><br />
+            <input type="checkbox" name="checkbox" id="is360">Is 360</input><br />
+            <input type="checkbox" name="checkbox" id="show-labels">Show labels</input><br />
+            <input type="checkbox" name="checkbox" id="show-cardinals" checked>Show cardinals</input><br />
+            <input type="checkbox" name="checkbox" id="show-circles" checked>Show circles</input><br />
+            <input type="range" value="5" min="0" max="100" id="inner-radius"
+                oninput="this.nextElementSibling.value = `Radius inner circle = ${this.value}`">
+            <output>Radius inner circle = 5</output>
+        </div>
+    </div>
+
+    <div class="top-1 start-1" style="position: absolute;
+        opacity: 100%;
+        left: 10px; 
+        top: 420px;
+        width: 400px;
+        background-color: rgb(255, 254, 254); 
+        border-style: solid;
+        border-color: black;
+        border-radius: 1px;
+        padding: 5px;">
+        <div id="info"></div>
+    </div>
+
+    <div class="top-1 start-1" style="position: absolute;
+        opacity: 100%;
+        left: 10px; 
+        top: 570px;
+        width: 400px;
+        background-color: rgb(255, 254, 254); 
+        border-style: solid;
+        border-color: black;
+        border-radius: 1px;
+        padding: 5px;">
+        The default rose diagram is random.<br /><br />
+
+        <span style="font-weight:bold;">
+            File format (columnwise):<br />
+        </span>
+        <span style="font-family: 'Courier New', Courier, monospace;">
+            name1 name2 ...<br />
+            val1 val2 ...<br />
+            val1 val2 ...<br />
+            ...<br />
+        </span><br />
+        or<br /><br />
+        <span style="font-family: 'Courier New', Courier, monospace;">
+            # name1 name2 ...<br />
+            val1 val2 ...<br />
+            ...<br />
+        </span>
+    </div>
+
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="/dist/geoplot.js"></script>
+
+    <script>
+        const geoplot = window["geoplot"]
+
+        let filename = ""
+
+        function rand(start, end) {
+            return start + Math.random() * (end - start)
+        }
+
+        function updateRose() {
+            // Display some info in html
+            const info = document.getElementById("info")
+            info.innerHTML = `<h3>Data info</h3>
+                &nbsp;&nbsp;File name: <b>${filename}</b><br/>
+                &nbsp;&nbsp;Nb data: <b>${rose.data.length}</b><br/>
+                &nbsp;&nbsp;Min: <b>${Math.min(...rose.data).toFixed(2)}</b><br/>
+                &nbsp;&nbsp;Max: <b>${Math.max(...rose.data).toFixed(2)}</b><br/>
+                `
+            rose.update()
+        }
+
+        function trimAll(s) {
+            return s
+                .replace(/\s+/g, ' ')
+                .replace(/^\s+|\s+$/, '')
+                .replace('\t', ' ')
+                .trimEnd()
+        }
+
+        const rose = new geoplot.RoseDiagram('rose', new Array(100).fill(0).map((v) => rand(0, 180)), {
+            width: 300,
+            height: 300,
+            // margin: {
+            //     top: 0,
+            //     left: 5,
+            //     right: 0,
+            //     bottom: 0
+            // }
+        })
+
+        const datas = []
+
+        d3.select('#upload').on("click", () => {
+            const selectTag = document.getElementById('selection')
+
+            const setup = () => {
+                const upload = document.createElement('input')
+                upload.type = 'file'
+                upload.id = 'upload-file'
+                upload.style.display = "none"
+                document.body.appendChild(upload)
+
+                upload.onchange = (event) => {
+
+                    if (event.target.files.length !== 0) {
+                        filename = event.target.files[0].name
+                        const file = event.target.files.item(0)
+                        file.text().then(buffer => {
+                            const lines = buffer.split('\n')
+                            // const data = []
+                            lines.forEach((line, i) => {
+                                line = trimAll(line)
+
+                                if (line.length !== 0) {
+                                    const toks = line.split(' ')
+                                    if (i === 0) {
+                                        // clear the option widget
+                                        const L = selectTag.options.length - 1
+                                        for (let j = L; j >= 0; j--) {
+                                            selectTag.remove(j)
+                                        }
+                                        // Get the property names
+                                        if (toks[0] === '#') {
+                                            toks.shift()
+                                        }
+                                        toks.forEach((t, j) => {
+                                            let opt = document.createElement("option")
+                                            opt.value = j
+                                            opt.innerHTML = t
+                                            selectTag.append(opt)
+
+                                            datas.push([]) // <-------------------
+                                        })
+                                    }
+                                    else {
+                                        toks.forEach((t, j) => {
+                                            datas[j].push(parseFloat(toks[j]))
+                                        })
+
+                                    }
+                                }
+
+                            })
+                            rose.data = datas[0]
+                            updateRose()
+                        })
+                    }
+
+                }
+            }
+            setup()
+            document.getElementById('upload-file').click()
+        })
+
+        d3.select('#selection').on("input", (e) => {
+            rose.data = datas[parseInt(e.target.value)]
+            updateRose()
+        })
+
+        d3.select('#is360').on("click", (e) => {
+            rose.is360 = e.target.checked
+            updateRose()
+        })
+
+        d3.select('#show-lines').on("click", (e) => {
+            rose.binBorder = e.target.checked
+            updateRose()
+        })
+
+        d3.select('#show-labels').on("click", (e) => {
+            rose.labels = e.target.checked
+            updateRose()
+        })
+
+        d3.select('#show-cardinals').on("click", (e) => {
+            rose.cardinals = e.target.checked
+            updateRose()
+        })
+
+        d3.select('#show-circles').on("click", (e) => {
+            rose.circles = e.target.checked
+            updateRose()
+        })
+        
+        d3.select('#bins-color').on("input", (e) => {
+            rose.fillColor = e.target.value
+            updateRose()
+        })
+
+        d3.select('#lines-color').on("input", (e) => {
+            rose.lineColor = e.target.value
+            updateRose()
+        })
+
+        d3.select('#angle').on("input", (e) => {
+            rose.binAngle = e.target.value
+            updateRose()
+        })
+
+        d3.select('#inner-radius').on("input", (e) => {
+            rose.innerRadius = e.target.value
+            updateRose()
+        })
+    </script>
+</body>
+
+</html>

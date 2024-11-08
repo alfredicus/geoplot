@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Table view</title>
+    <script src="/dist/geoplot.js"></script>
+</head>
+
+<body>
+    <div id="table-container" style="width: 200;height: 100;"></div>
+    <script>
+        const geoplot = window["geoplot"]
+
+        // Usage example
+        const data = new Array(200).fill(undefined).map( (v, i) => {
+            return {id: i, age: Math.trunc(Math.random()*90)}
+        })
+
+        const config = {
+            width: '1200px',
+            height: '800px',
+            columnWidths: {
+                id: '80px',
+                age: '120px'
+            },
+            minColumnWidth: '180px'
+        }
+
+        const table = new geoplot.TableView('table-container', data, config, (updatedData) => {
+            console.log('Data changed:', updatedData)
+        })
+
+    </script>
+</body>
+
+</html>
