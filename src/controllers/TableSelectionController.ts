@@ -1,19 +1,28 @@
 import { TableView } from "../views";
 
 // Types for selection system
-interface SelectionState {
+/**
+ * @category Table
+ */
+export interface SelectionState {
     selectedRows: Set<number>;
     lastSelectedRow: number | null;
     dragStartRow: number | null;
     isDragging: boolean;
 }
 
-interface SelectionOptions {
+/**
+ * @category Table
+ */
+export interface SelectionOptions {
     multiSelect?: boolean;
     onSelectionChange?: (selectedRows: number[]) => void;
 }
 
 // Base controller interface
+/**
+ * @category Table
+ */
 export interface TableController {
     initialize(): void;
     destroy(): void;
@@ -77,8 +86,9 @@ document.getElementById('clearSelectionButton')?.addEventListener('click', () =>
 // Clean up when needed
 window.addEventListener('unload', () => {
     selectionController.destroy();
-});
+}
 ```
+* @category Table
 */
 export class TableSelectionController implements TableController {
     private state: SelectionState;
@@ -187,7 +197,7 @@ export class TableSelectionController implements TableController {
             return;
         }
 
-        const newSelection = new Set<number>();
+        let newSelection = new Set<number>();
 
         if (isShiftKey && this.state.lastSelectedRow !== null) {
             // Range selection
@@ -224,6 +234,7 @@ export class TableSelectionController implements TableController {
         const container = this.view.getBodyWrapper();
         const elements = document.elementsFromPoint(container.getBoundingClientRect().left, y);
         return elements.find(el => el.classList.contains('excel-row-selector')) as HTMLElement || null;
+        return null
     }
 
     private updateSelectionVisuals(): void {

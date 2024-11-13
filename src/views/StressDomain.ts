@@ -1,12 +1,10 @@
+/**
+ * @category Stress domain
+ */
 export type Data = {
     R: number,
     theta: number,
     value: number
-}
-
-type Point = {
-    R: number,
-    theta: number
 }
 
 /**
@@ -17,6 +15,7 @@ type Point = {
  * d.addPoint(1.5, 120) // Strike-slip fault regime
  * d.addPoint(2.5, 30)  // Reverse fault regime
  * ```
+ * @category Stress domain
  */
 export class StressDomain {
     private width = 200
@@ -283,9 +282,17 @@ export class StressDomain {
     }
 }
 
-const colorSchemes = {
+/**
+ * @category Stress domain
+ */
+export const colorSchemes = {
     viridis: ['#440154', '#482878', '#3e4989', '#31688e', '#26828e', '#1f9e89', '#35b779', '#6ece58', '#b5de2b', '#fde725'],
     plasma: ['#0d0887', '#46039f', '#7201a8', '#9c179e', '#bd3786', '#d8576b', '#ed7953', '#fb9f3a', '#fdca26', '#f0f921'],
     inferno: ['#000004', '#1b0c41', '#4a0c6b', '#781c6d', '#a52c60', '#cf4446', '#ed6925', '#fb9b06', '#f7d13d', '#fcffa4'],
     bw: ['#000000', '#ffffff']
+}
+
+type Point = {
+    R: number,
+    theta: number
 }

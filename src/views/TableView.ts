@@ -1,3 +1,6 @@
+/**
+ * @category Table
+ */
 export interface TableViewConfig {
     width?: string;
     height?: string;
@@ -5,9 +8,13 @@ export interface TableViewConfig {
     minColumnWidth?: string;
 }
 
+/**
+ * @category Table
+ */
 export class TableView {
     private container: HTMLElement;
     private table: HTMLElement;
+    private bodyWrapper: HTMLElement;
     private data: any[];
     private sortColumn: string | null = null;
     private sortDirection: 'asc' | 'desc' = 'asc';
@@ -33,7 +40,36 @@ export class TableView {
 
         this.table = document.createElement('div');
         this.table.className = 'excel-table';
+        this.bodyWrapper = document.createElement('div'); // Initialize bodyWrapper
+        this.bodyWrapper.className = 'excel-body-wrapper';
         this.init();
+    }
+
+    public getBodyWrapper(): HTMLElement {
+        return this.bodyWrapper;
+    }
+
+    public setData(data: any[]) {
+        this.data = data;
+        this.columns = Object.keys(data[0] || {});
+        this.renderTable()
+    }
+
+    public getContainer() {
+        return this.container
+    }
+
+    public getRowCount(): number {
+        return this.data.length;
+    }
+
+    public updateRowSelection(selectedRows: number[]): void {
+        // Update cell backgrounds for selected rows
+        const cells = this.table.querySelectorAll('.excel-cell');
+        cells.forEach((cell: Element) => {
+            const rowIndex = parseInt((cell as HTMLElement).dataset.row || '0');
+            cell.classList.toggle('selected', selectedRows.includes(rowIndex));
+        });
     }
 
     private init(): void {
@@ -55,6 +91,7 @@ export class TableView {
                 height: ${this.config.height};
                 display: flex;
                 flex-direction: column;
+                position: relative;
             }
 
             .excel-toolbar {
@@ -64,13 +101,15 @@ export class TableView {
                 display: flex;
                 gap: 8px;
                 flex-shrink: 0;
+                z-index: 3;
             }
 
             .excel-content-wrapper {
                 flex: 1;
-                overflow: hidden;
                 display: flex;
                 flex-direction: column;
+                overflow: hidden;
+                position: relative;
             }
 
             .excel-header {
@@ -80,16 +119,51 @@ export class TableView {
                 position: sticky;
                 top: 0;
                 z-index: 2;
-                flex-shrink: 0;
+                ${this.createGridTemplateColumns()}
             }
 
             .excel-body-wrapper {
-                overflow: auto;
                 flex: 1;
+                overflow: auto;
+                position: relative;
+                background: white;
             }
+
+
+
+
+
+
+            /* Scrollbar Styles */
+            .excel-body-wrapper::-webkit-scrollbar {
+                width: 10px;
+                height: 10px;
+            }
+
+            .excel-body-wrapper::-webkit-scrollbar-track {
+                background: #f1f5f9;
+                border-radius: 5px;
+            }
+
+            .excel-body-wrapper::-webkit-scrollbar-thumb {
+                background: #cbd5e1;
+                border-radius: 5px;
+                border: 2px solid #f1f5f9;
+            }
+
+            .excel-body-wrapper::-webkit-scrollbar-thumb:hover {
+                background: #94a3b8;
+            }
+
+            .excel-body-wrapper::-webkit-scrollbar-corner {
+                background: #f1f5f9;
+            }
+
 
             .excel-body {
                 display: grid;
+                ${this.createGridTemplateColumns()}
+                width: fit-content;
                 min-width: 100%;
             }
 
@@ -109,21 +183,107 @@ export class TableView {
                 position: relative;
                 min-width: ${this.config.minColumnWidth};
                 box-sizing: border-box;
+                background: #f8fafc;
+                height: 48px; /* Fixed header height */
+            }
+
+
+
+
+
+
+
+            .excel-header-cell.sortable {
+                cursor: pointer;
+            }
+
+            .excel-header-cell.sortable:hover {
+                background: #f1f5f9;
+            }
+
+            .excel-header-cell .sort-indicator {
+                margin-left: 4px;
+                opacity: 0.5;
+            }
+
+            .excel-header-cell.sort-asc .sort-indicator::after {
+                content: '↑';
+                opacity: 1;
+            }
+
+            .excel-header-cell.sort-desc .sort-indicator::after {
+                content: '↓';
+                opacity: 1;
             }
 
             .excel-cell {
                 padding: 8px 16px;
                 border-bottom: 1px solid #e2e8f0;
                 border-right: 1px solid #e2e8f0;
-                min-height: 40px;
+                height: 40px;
                 display: flex;
                 align-items: center;
                 min-width: ${this.config.minColumnWidth};
                 box-sizing: border-box;
                 background: white;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
             }
 
-            /* ... rest of the styles remain the same ... */
+            .excel-cell.editable {
+                cursor: text;
+            }
+
+            .excel-cell.editing {
+                padding: 0;
+            }
+
+            .excel-cell input {
+                width: 100%;
+                height: 100%;
+                padding: 8px 16px;
+                border: 2px solid #3b82f6;
+                outline: none;
+                font-size: inherit;
+                font-family: inherit;
+            }
+
+            .excel-filter {
+                width: calc(100% - 8px);
+                margin: 4px;
+                padding: 4px 8px;
+                border: 1px solid #e2e8f0;
+                border-radius: 4px;
+                font-size: 0.9em;
+            }
+
+            .excel-button {
+                padding: 6px 12px;
+                border: 1px solid #e2e8f0;
+                border-radius: 4px;
+                background: white;
+                cursor: pointer;
+                font-size: 14px;
+            }
+
+            /* for the selection */
+            .excel-button:hover {
+                background: #f1f5f9;
+            }
+
+            .excel-cell.selected {
+                background-color: rgba(59, 130, 246, 0.1) !important;
+            }
+
+            .excel-cell.selection-anchor {
+                background-color: rgba(59, 130, 246, 0.2) !important;
+            }
+
+            .excel-row:hover .excel-cell {
+                background-color: #f8fafc;
+            }
+
         `;
         document.head.appendChild(style);
     }
@@ -153,14 +313,13 @@ export class TableView {
         const header = this.createHeader();
         contentWrapper.appendChild(header);
 
-        // Body wrapper for scrolling
-        const bodyWrapper = document.createElement('div');
-        bodyWrapper.className = 'excel-body-wrapper';
+        // Clear and setup body wrapper
+        this.bodyWrapper.innerHTML = '';
 
         // Body
         const body = this.createBody();
-        bodyWrapper.appendChild(body);
-        contentWrapper.appendChild(bodyWrapper);
+        this.bodyWrapper.appendChild(body);
+        contentWrapper.appendChild(this.bodyWrapper);
 
         this.table.appendChild(contentWrapper);
         this.container.appendChild(this.table);
@@ -218,6 +377,7 @@ export class TableView {
         const filteredData = this.getFilteredData();
         const sortedData = this.getSortedData(filteredData);
 
+        // Create a row container for each row
         sortedData.forEach((row, rowIndex) => {
             this.columns.forEach(column => {
                 const cell = document.createElement('div');

@@ -1,5 +1,8 @@
 import * as d3 from 'd3'
 
+/**
+ * @category Rose diagram
+ */
 export type RoseDiagramParameters = {
     width?: number,
     height?: number,
@@ -24,6 +27,9 @@ export type RoseDiagramParameters = {
     colourHover?: string,
 }
 
+/**
+ * @category Rose diagram
+ */
 export const DefaultRoseDiagramParameters: RoseDiagramParameters = {
     width: 400,
     height: 400,
@@ -48,6 +54,9 @@ export const DefaultRoseDiagramParameters: RoseDiagramParameters = {
     colourHover: 'purple'
 }
 
+/**
+ * @category Rose diagram
+ */
 export class RoseDiagram {
     private element_: HTMLElement = undefined
     private data_: number[] = []
@@ -342,8 +351,9 @@ type Item = {
  * @param {*} serie the array of data
  * @param {*} angle of a bin (in degrees)
  * @returns 
+ * @category Rose diagram
  */
-function binSerieFromAngle(serie: number[], angle: number, isBetween0and360: boolean) {
+export function binSerieFromAngle(serie: number[], angle: number, isBetween0and360: boolean) {
     const nbBins = Math.round(180 / angle)
 
     const binned = new Array(nbBins)

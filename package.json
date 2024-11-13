@@ -6,16 +6,17 @@
     "types": "lib/index.d.ts",
     "scripts": {
         "1": "-------------------------------------------------------------------",
+        "2": "-------------------------------------------------------------------",
+        "3": "-------------------------------------------------------------------",
         "mohr": "http-server . -p 8001 -o /examples/index-mohr.html",
         "wulff": "http-server . -p 8001 -o /examples/index-wulff.html",
         "histogram": "http-server . -p 8001 -o /examples/index-histogram.html",
         "domain": "http-server . -p 8001 -o /examples/index-stress-domain.html",
         "rose": "http-server . -p 8001 -o /examples/index-rose-diagram.html",
-        "table": "http-server . -p 8001 -o /examples/index-tableview.html",
-        "2": "-------------------------------------------------------------------",
+        "table": "http-server . -p 8001 -o /examples/index-tableview3.html",
         "build": "webpack --mode production",
         "build:dev": "webpack --mode development",
-        "3": "-------------------------------------------------------------------"
+        "doc": "npx typedoc src/index.ts"
     },
     "keywords": [],
     "author": "alfredicus & xaliphostes & claude",
@@ -24,12 +25,14 @@
         "@types/d3": "^7.4.3",
         "@types/node": "^22.5.5",
         "ts-loader": "^9.5.1",
+        "typedoc": "^0.26.11",
         "typescript": "^5.6.2",
         "webpack": "^5.95.0",
         "webpack-cli": "^5.1.4",
         "webpack-dev-server": "^5.1.0"
     },
     "dependencies": {
-        "d3": "^7.9.0"
+        "d3": "^7.9.0",
+        "xlsx": "^0.18.5"
     }
 }

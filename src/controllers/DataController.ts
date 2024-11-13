@@ -3,6 +3,9 @@ import { DataPoint } from "../model/DataPoint";
 import { View } from "../views/View";
 
 // Controller
+/**
+ * @category MVC
+ */
 export class DataController {
     private model: DataModel;
     private views: View[];

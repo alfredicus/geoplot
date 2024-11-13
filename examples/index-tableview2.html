@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Table Demo with Data Loader</title>
+
+    <!-- Include xlsx for Excel support -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <style>
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        .controls {
+            margin-bottom: 20px;
+            padding: 16px;
+            background: #f8fafc;
+            border-radius: 8px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .button {
+            padding: 8px 16px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .button:hover {
+            background: #2563eb;
+        }
+
+        .loader-status {
+            font-size: 14px;
+            color: #64748b;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="controls">
+            <button id="loadFileBtn" class="button">Load File</button>
+            <button id="selectAllBtn" class="button">Select All</button>
+            <button id="clearSelectionBtn" class="button">Clear Selection</button>
+            <span id="loaderStatus" class="loader-status"></span>
+        </div>
+        <div id="tableContainer"></div>
+    </div>
+
+    <script src="/dist/geoplot.js"></script>
+
+    <script type="module">
+        // import { TableView, TableDataLoader, TableSelectionController } from '/dist/geoplot.js'
+        const geoplot = window["geoplot"]
+
+        const sampleData = Array.from({ length: 1000 }, (_, i) => ({
+            id: i + 1,
+            name: `Item ${i + 1}`,
+            description: `Description for item ${i + 1}`,
+            value: Math.round(Math.random() * 1000),
+            date: new Date(2024, 0, i % 31 + 1).toISOString().split('T')[0]
+        }));
+
+        class TableDemo {
+            constructor() {
+                // Initialize empty table
+                this.tableView = new geoplot.TableView('tableContainer', sampleData, {
+                    width: '100%',
+                    height: '600px',
+                    minColumnWidth: '150px'
+                });
+
+                // Initialize data loader
+                this.dataLoader = new geoplot.TableDataLoader(this.tableView, {
+                    dateColumns: ['date', 'createdAt', 'updatedAt'],
+                    numberColumns: ['amount', 'quantity', 'price'],
+                    onProgress: this.updateProgress.bind(this),
+                    onError: this.handleError.bind(this)
+                });
+
+                // Initialize selection controller
+                this.selectionController = new geoplot.TableSelectionController(this.tableView, {
+                    multiSelect: true,
+                    onSelectionChange: this.handleSelectionChange.bind(this)
+                });
+
+                this.initialize();
+            }
+
+            initialize() {
+                // Initialize controllers
+                this.dataLoader.initialize();
+                this.selectionController.initialize();
+
+                // Add event listeners
+                document.getElementById('loadFileBtn')
+                    ?.addEventListener('click', () => this.dataLoader.showFileDialog());
+
+                document.getElementById('selectAllBtn')
+                    ?.addEventListener('click', () => this.selectionController.selectAll());
+
+                document.getElementById('clearSelectionBtn')
+                    ?.addEventListener('click', () => this.selectionController.clearSelection());
+
+                // Clean up on page unload
+                window.addEventListener('unload', () => {
+                    this.dataLoader.destroy();
+                    this.selectionController.destroy();
+                });
+            }
+
+            updateProgress(progress) {
+                const status = document.getElementById('loaderStatus');
+                if (status) {
+                    status.textContent = progress === 100 ?
+                        'File loaded successfully!' :
+                        `Loading: ${progress}%`;
+                }
+            }
+
+            handleError(error) {
+                const status = document.getElementById('loaderStatus');
+                if (status) {
+                    status.textContent = `Error: ${error.message}`;
+                    status.style.color = '#ef4444';
+                }
+            }
+
+            handleSelectionChange(selectedRows) {
+                console.log('Selected rows:', selectedRows);
+                // You can add your own selection handling logic here
+            }
+        }
+
+        // Initialize the demo when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            const demo = new TableDemo();
+        });
+    </script>
+</body>
+
+</html>

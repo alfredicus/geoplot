@@ -1,5 +1,8 @@
 import { Action } from './Action'
 
+/**
+ * @category Action management
+ */
 export class ActionManager {
     private undoStack: Action[] = [];
     private redoStack: Action[] = [];

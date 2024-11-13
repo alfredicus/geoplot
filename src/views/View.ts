@@ -1,5 +1,8 @@
 import { DataPoint } from "../model/DataPoint"
 
+/**
+ * @category MVC
+ */
 export interface View {
     update(data: DataPoint[]): void
 }

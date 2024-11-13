@@ -1,11 +1,16 @@
 import { DataPoint } from "./DataPoint";
 
+/**
+ * @category MVC
+ */
 export interface DataState {
     dataPoints: DataPoint[];
     selectedCategory: string | null;
 }
 
-// Model
+/**
+ * @category MVC
+ */
 export class DataModel {
     private data: DataState;
     private listeners: ((state: DataState) => void)[] = [];

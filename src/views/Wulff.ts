@@ -1,6 +1,9 @@
 
 import * as d3 from 'd3'
 
+/**
+ * @category Wulff
+ */
 export interface WulffOptions {
     width?: number
     height?: number
@@ -15,6 +18,9 @@ export interface WulffOptions {
     }
 }
 
+/**
+ * @category Wulff
+ */
 export class Wulff {
     // public API
     
@@ -305,12 +311,17 @@ export class Wulff {
 
 // -------------------------------
 
-interface Point {
+/**
+ * @category Wulff
+ */
+export interface Point {
     x: number
     y: number
 }
-
-interface GreatCircle {
+/**
+ * @category Wulff
+ */
+export interface GreatCircle {
     id: string;
     strike: number;
     dip: number;

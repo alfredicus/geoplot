@@ -1,10 +1,16 @@
 import * as d3 from 'd3';
 
+/**
+ * @category Histogram
+ */
 export interface HistoDataPoint {
     id: number;
     angle: number;
 }
 
+/**
+ * @category Histogram
+ */
 export interface HistogramOptions {
     container: string;
     width: number;
@@ -33,6 +39,8 @@ export interface HistogramOptions {
 
     const histogram = new Histogram(data, options)
     histogram.render()
+
+    @category Histogram
  */
 export class Histogram {
     private svg: d3.Selection<SVGGElement, unknown, HTMLElement, any>;

@@ -1,8 +1,14 @@
 import * as d3 from 'd3';
 
+/**
+ * @category Mohr
+ */
 export type Normal = [number, number, number]
 
 // TODO using an interface instead of a type
+/**
+ * @category Mohr
+ */
 export type MohrCircleOptions = {
     div: string,
 
@@ -34,6 +40,8 @@ export type MohrCircleOptions = {
  * m.setSigmas(3, 2, 1)
  * m.addNormals([[1,0,0], [0,1,0], [0,0,1], [1,0,1]])
  * ```
+ *
+ * @category Mohr
  */
 export class MohrCircle {
     constructor(private options: MohrCircleOptions) {
@@ -289,14 +297,20 @@ function normalizeVector(n1: number, n2: number, n3: number): [number, number, n
     return [n1 / magnitude, n2 / magnitude, n3 / magnitude]
 }
 
-interface Margin {
+/**
+ * @category Mohr
+ */
+export interface Margin {
     top: number;
     right: number;
     bottom: number;
     left: number;
 }
 
-interface StressPoint {
+/**
+ * @category Mohr
+ */
+export interface StressPoint {
     sigma_n: number;
     tau: number;
 }
