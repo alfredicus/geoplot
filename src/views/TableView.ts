@@ -22,6 +22,11 @@ export class TableView {
     private filters: Map<string, string> = new Map();
     private config: TableViewConfig;
     private onDataChange?: (data: any[]) => void;
+    private isResizing: boolean = false;
+    private currentResizer: HTMLElement | null = null;
+    private startX: number = 0;
+    private startWidth: number = 0;
+    private currentColumn: string = '';
 
     constructor(containerId: string, data: any[], config: TableViewConfig = {}, onChange?: (data: any[]) => void) {
         const container = document.getElementById(containerId);
@@ -40,7 +45,7 @@ export class TableView {
 
         this.table = document.createElement('div');
         this.table.className = 'excel-table';
-        this.bodyWrapper = document.createElement('div'); // Initialize bodyWrapper
+        this.bodyWrapper = document.createElement('div');
         this.bodyWrapper.className = 'excel-body-wrapper';
         this.init();
     }
@@ -52,11 +57,11 @@ export class TableView {
     public setData(data: any[]) {
         this.data = data;
         this.columns = Object.keys(data[0] || {});
-        this.renderTable()
+        this.renderTable();
     }
 
     public getContainer() {
-        return this.container
+        return this.container;
     }
 
     public getRowCount(): number {
@@ -64,7 +69,6 @@ export class TableView {
     }
 
     public updateRowSelection(selectedRows: number[]): void {
-        // Update cell backgrounds for selected rows
         const cells = this.table.querySelectorAll('.excel-cell');
         cells.forEach((cell: Element) => {
             const rowIndex = parseInt((cell as HTMLElement).dataset.row || '0');
@@ -112,14 +116,21 @@ export class TableView {
                 position: relative;
             }
 
-            .excel-header {
-                display: grid;
-                background: #f8fafc;
-                border-bottom: 2px solid #e2e8f0;
+            .excel-header-wrapper {
                 position: sticky;
                 top: 0;
                 z-index: 2;
+                background: #f8fafc;
+                overflow: hidden;
+                border-bottom: 2px solid #e2e8f0;
+            }
+
+            .excel-header {
+                display: grid;
+                background: #f8fafc;
                 ${this.createGridTemplateColumns()}
+                min-width: 100%;
+                width: fit-content;
             }
 
             .excel-body-wrapper {
@@ -129,47 +140,11 @@ export class TableView {
                 background: white;
             }
 
-
-
-
-
-
-            /* Scrollbar Styles */
-            .excel-body-wrapper::-webkit-scrollbar {
-                width: 10px;
-                height: 10px;
-            }
-
-            .excel-body-wrapper::-webkit-scrollbar-track {
-                background: #f1f5f9;
-                border-radius: 5px;
-            }
-
-            .excel-body-wrapper::-webkit-scrollbar-thumb {
-                background: #cbd5e1;
-                border-radius: 5px;
-                border: 2px solid #f1f5f9;
-            }
-
-            .excel-body-wrapper::-webkit-scrollbar-thumb:hover {
-                background: #94a3b8;
-            }
-
-            .excel-body-wrapper::-webkit-scrollbar-corner {
-                background: #f1f5f9;
-            }
-
-
             .excel-body {
                 display: grid;
                 ${this.createGridTemplateColumns()}
                 width: fit-content;
                 min-width: 100%;
-            }
-
-            .excel-header,
-            .excel-body {
-                ${this.createGridTemplateColumns()}
             }
 
             .excel-header-cell {
@@ -184,14 +159,34 @@ export class TableView {
                 min-width: ${this.config.minColumnWidth};
                 box-sizing: border-box;
                 background: #f8fafc;
-                height: 48px; /* Fixed header height */
+                height: 48px;
             }
 
+            .column-resizer {
+                position: absolute;
+                right: 0;
+                top: 0;
+                bottom: 0;
+                width: 4px;
+                background: transparent;
+                cursor: col-resize;
+                z-index: 10;
+            }
 
+            .column-resizer:hover,
+            .column-resizer.resizing {
+                background: #3b82f6;
+            }
 
+            .excel-table.resizing {
+                cursor: col-resize;
+                user-select: none;
+            }
 
-
-
+            .excel-table.resizing .excel-cell,
+            .excel-table.resizing .excel-header-cell {
+                cursor: col-resize;
+            }
 
             .excel-header-cell.sortable {
                 cursor: pointer;
@@ -267,7 +262,6 @@ export class TableView {
                 font-size: 14px;
             }
 
-            /* for the selection */
             .excel-button:hover {
                 background: #f1f5f9;
             }
@@ -284,6 +278,30 @@ export class TableView {
                 background-color: #f8fafc;
             }
 
+            /* Scrollbar Styles */
+            .excel-body-wrapper::-webkit-scrollbar {
+                width: 10px;
+                height: 10px;
+            }
+
+            .excel-body-wrapper::-webkit-scrollbar-track {
+                background: #f1f5f9;
+                border-radius: 5px;
+            }
+
+            .excel-body-wrapper::-webkit-scrollbar-thumb {
+                background: #cbd5e1;
+                border-radius: 5px;
+                border: 2px solid #f1f5f9;
+            }
+
+            .excel-body-wrapper::-webkit-scrollbar-thumb:hover {
+                background: #94a3b8;
+            }
+
+            .excel-body-wrapper::-webkit-scrollbar-corner {
+                background: #f1f5f9;
+            }
         `;
         document.head.appendChild(style);
     }
@@ -309,9 +327,14 @@ export class TableView {
         const contentWrapper = document.createElement('div');
         contentWrapper.className = 'excel-content-wrapper';
 
+        // Header wrapper
+        const headerWrapper = document.createElement('div');
+        headerWrapper.className = 'excel-header-wrapper';
+
         // Header
         const header = this.createHeader();
-        contentWrapper.appendChild(header);
+        headerWrapper.appendChild(header);
+        contentWrapper.appendChild(headerWrapper);
 
         // Clear and setup body wrapper
         this.bodyWrapper.innerHTML = '';
@@ -323,6 +346,9 @@ export class TableView {
 
         this.table.appendChild(contentWrapper);
         this.container.appendChild(this.table);
+
+        // Add scroll synchronization
+        this.syncHeaderScroll();
     }
 
     private createToolbar(): HTMLElement {
@@ -360,8 +386,19 @@ export class TableView {
             filter.value = this.filters.get(column) || '';
             headerCell.appendChild(filter);
 
+            // Add column resizer
+            const resizer = document.createElement('div');
+            resizer.className = 'column-resizer';
+            resizer.dataset.column = column;
+            headerCell.appendChild(resizer);
+
             if (this.sortColumn === column) {
                 headerCell.classList.add(`sort-${this.sortDirection}`);
+            }
+
+            // Set initial width if configured
+            if (this.config.columnWidths?.[column]) {
+                headerCell.style.width = this.config.columnWidths[column];
             }
 
             header.appendChild(headerCell);
@@ -377,7 +414,6 @@ export class TableView {
         const filteredData = this.getFilteredData();
         const sortedData = this.getSortedData(filteredData);
 
-        // Create a row container for each row
         sortedData.forEach((row, rowIndex) => {
             this.columns.forEach(column => {
                 const cell = document.createElement('div');
@@ -385,6 +421,12 @@ export class TableView {
                 cell.textContent = this.formatCellValue(row[column]);
                 cell.dataset.row = rowIndex.toString();
                 cell.dataset.column = column;
+
+                // Apply column width if configured
+                if (this.config.columnWidths?.[column]) {
+                    cell.style.width = this.config.columnWidths[column];
+                }
+
                 body.appendChild(cell);
             });
         });
@@ -392,20 +434,12 @@ export class TableView {
         return body;
     }
 
-    private formatColumnName(column: string): string {
-        return column
-            .replace(/([A-Z])/g, ' $1')
-            .replace(/^./, str => str.toUpperCase());
-    }
-
-    private formatCellValue(value: any): string {
-        if (value instanceof Date) {
-            return value.toLocaleDateString();
-        }
-        if (typeof value === 'number') {
-            return value.toLocaleString();
-        }
-        return value?.toString() || '';
+    private syncHeaderScroll(): void {
+        const headerWrapper = this.table.querySelector('.excel-header-wrapper') as HTMLElement;
+        
+        this.bodyWrapper.addEventListener('scroll', () => {
+            headerWrapper.scrollLeft = this.bodyWrapper.scrollLeft;
+        });
     }
 
     private attachEventListeners(): void {
@@ -437,6 +471,70 @@ export class TableView {
                 this.startEditing(target);
             }
         });
+
+        // Column resize events
+        this.table.querySelectorAll('.column-resizer').forEach(resizer => {
+            resizer.addEventListener('mousedown', this.startResize.bind(this));
+        });
+
+        document.addEventListener('mousemove', this.handleResize.bind(this));
+        document.addEventListener('mouseup', this.stopResize.bind(this));
+    }
+
+    private startResize(e: MouseEvent): void {
+        const resizer = e.target as HTMLElement;
+        const headerCell = resizer.parentElement as HTMLElement;
+        
+        this.isResizing = true;
+        this.currentResizer = resizer;
+        this.startX = e.pageX;
+        this.startWidth = headerCell.offsetWidth;
+        this.currentColumn = resizer.dataset.column || '';
+        
+        this.table.classList.add('resizing');
+        resizer.classList.add('resizing');
+
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    private handleResize(e: MouseEvent): void {
+        if (!this.isResizing) return;
+
+        const deltaX = e.pageX - this.startX;
+        const newWidth = Math.max(
+            parseInt(this.config.minColumnWidth || '150'),
+            this.startWidth + deltaX
+        );
+
+        // Update header cell width
+        const headerCells = this.table.querySelectorAll('.excel-header-cell');
+        const columnIndex = this.columns.indexOf(this.currentColumn);
+        const headerCell = headerCells[columnIndex] as HTMLElement;
+        headerCell.style.width = `${newWidth}px`;
+
+        // Update all body cells in the same column
+        const bodyCells = this.table.querySelectorAll(`.excel-cell[data-column="${this.currentColumn}"]`);
+        bodyCells.forEach((cell: Element) => {
+            (cell as HTMLElement).style.width = `${newWidth}px`;
+        });
+
+        // Update column width in config
+        if (!this.config.columnWidths) this.config.columnWidths = {};
+        this.config.columnWidths[this.currentColumn] = `${newWidth}px`;
+
+        e.preventDefault();
+    }
+
+    private stopResize(): void {
+        if (!this.isResizing) return;
+
+        this.isResizing = false;
+        this.table.classList.remove('resizing');
+        if (this.currentResizer) {
+            this.currentResizer.classList.remove('resizing');
+            this.currentResizer = null;
+        }
     }
 
     private startEditing(cell: HTMLElement): void {
@@ -475,6 +573,22 @@ export class TableView {
         if (!isNaN(Number(value))) return Number(value);
         if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return new Date(value);
         return value;
+    }
+
+    private formatColumnName(column: string): string {
+        return column
+            .replace(/([A-Z])/g, ' $1')
+            .replace(/^./, str => str.toUpperCase());
+    }
+
+    private formatCellValue(value: any): string {
+        if (value instanceof Date) {
+            return value.toLocaleDateString();
+        }
+        if (typeof value === 'number') {
+            return value.toLocaleString();
+        }
+        return value?.toString() || '';
     }
 
     private handleSort(column: string): void {
@@ -520,7 +634,7 @@ export class TableView {
     private exportToCsv(): void {
         const headers = this.columns.join(',');
         const rows = this.getFilteredData().map(row =>
-            this.columns.map(col => `"${row[col]}"`).join(',')
+            this.columns.map(col => `"${this.formatCellValue(row[col])}"`).join(',')
         );
 
         const csv = [headers, ...rows].join('\n');
@@ -535,17 +649,3 @@ export class TableView {
         URL.revokeObjectURL(url);
     }
 }
-
-// class TableViewController {
-//     private model: DataModel;
-//     private view: TableView;
-
-//     constructor(model: DataModel, containerId: string) {
-//         this.model = model;
-//         this.view = new TableView(containerId, model.getData(), this.handleDataChange);
-//     }
-
-//     private handleDataChange = (newData: any[]) => {
-//         this.model.updateData(newData);
-//     }
-// }
