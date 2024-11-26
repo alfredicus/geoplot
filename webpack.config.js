@@ -69,7 +69,9 @@ module.exports = {
         '@youwol/dataframe': "@youwol/dataframe",
         '@youwol/math': "@youwol/math",
         'd3': "d3",
-        'xlsx': "xlsx"
+        'xlsx': "xlsx",
+        'three': "three",
+        '@alfredo-taboada/stress': "@alfredo-taboada/stress"
     }],
     module: {
         rules: [
@@ -84,6 +86,6 @@ module.exports = {
     },
     devtool: 'source-map',
     plugins: [
-        new BundleAnalyzerPlugin()
+        // new BundleAnalyzerPlugin()
     ]
 };

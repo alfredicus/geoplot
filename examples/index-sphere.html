@@ -1,0 +1,169 @@
+// index.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stress Sphere</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: #f0f0f0;
+        }
+        canvas {
+            width: 100vw;
+            height: 100vh;
+            display: block;
+        }
+        #controls {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+        .control-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        button {
+            margin: 5px;
+            padding: 5px 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="controls">
+        <div class="control-group">
+            <label>Stress Values:</label>
+            <div>
+                σ1: <input type="number" id="sigma1" value="1" step="0.1"><br>
+                σ2: <input type="number" id="sigma2" value="0" step="0.1"><br>
+                σ3: <input type="number" id="sigma3" value="0" step="0.1">
+            </div>
+            <button onclick="updateStressState()">Update Stress</button>
+        </div>
+        <div class="control-group">
+            <label>Add Curves:</label>
+            <div>
+                θ: <input type="number" id="theta" value="45" min="0" max="90"><br>
+                φ: <input type="number" id="phi" value="45" min="0" max="90">
+            </div>
+            <button onclick="addIntegralCurve()">Add Integral</button>
+            <button onclick="addEquipotentialCurve()">Add Equipotential</button>
+        </div>
+        <div class="control-group">
+            <button onclick="clearIntegralCurves()">Clear Integral</button>
+            <button onclick="clearEquipotentialCurves()">Clear Equipotential</button>
+        </div>
+    </div>
+    <script src="/dist/geoplot.js"></script>
+
+    <script type="module">
+        import * as THREE from '/node_modules/three/build/three.module.js';
+        import { OrbitControls } from '/node_modules/three/examples/jsm/controls/OrbitControls.js';
+        
+        const geoplot = window["geoplot"]
+
+        let scene, camera, renderer, controls, stressSphere;
+
+        function init() {
+            // Scene setup
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0xf0f0f0);
+
+            // Camera setup
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.z = 3;
+
+            // Renderer setup
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.body.appendChild(renderer.domElement);
+
+            // Lighting
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+            scene.add(ambientLight);
+
+            const pointLight = new THREE.PointLight(0xffffff, 1);
+            pointLight.position.set(5, 5, 5);
+            scene.add(pointLight);
+
+            // Controls
+            controls = new OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+
+            // Create stress sphere
+            stressSphere = new geoplot.StressSphere(1);
+            scene.add(stressSphere.getObject());
+
+            // Initial stress state
+            stressSphere.updateStressState(1, 0, 0);
+
+            // Add some initial curves
+            const intervals = [0, 30, 60, 90];
+            intervals.forEach(theta => {
+                intervals.forEach(phi => {
+                    stressSphere.addIntegralCurve({ theta, phi });
+                });
+            });
+
+            // Animation loop
+            animate();
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        // Expose functions to window for HTML controls
+        window.updateStressState = function() {
+            const sigma1 = parseFloat(document.getElementById('sigma1').value);
+            const sigma2 = parseFloat(document.getElementById('sigma2').value);
+            const sigma3 = parseFloat(document.getElementById('sigma3').value);
+            stressSphere.updateStressState(sigma1, sigma2, sigma3);
+        };
+
+        window.addIntegralCurve = function() {
+            const theta = parseFloat(document.getElementById('theta').value);
+            const phi = parseFloat(document.getElementById('phi').value);
+            stressSphere.addIntegralCurve({ theta, phi });
+        };
+
+        window.addEquipotentialCurve = function() {
+            const theta = parseFloat(document.getElementById('theta').value);
+            const phi = parseFloat(document.getElementById('phi').value);
+            stressSphere.addEquipotentialCurve({ theta, phi });
+        };
+
+        window.clearIntegralCurves = function() {
+            stressSphere.clearIntegralCurves();
+        };
+
+        window.clearEquipotentialCurves = function() {
+            stressSphere.clearEquipotentialCurves();
+        };
+
+        // Handle window resizing
+        window.addEventListener('resize', onWindowResize, false);
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        // Start the application
+        init();
+    </script>
+</body>
+</html>

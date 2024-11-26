@@ -22,6 +22,11 @@ export class TableView {
     private filters: Map<string, string> = new Map();
     private config: TableViewConfig;
     private onDataChange?: (data: any[]) => void;
+    private isResizing: boolean = false;
+    private currentResizer: HTMLElement | null = null;
+    private startX: number = 0;
+    private startWidth: number = 0;
+    private currentColumn: string = '';
 
     constructor(containerId: string, data: any[], config: TableViewConfig = {}, onChange?: (data: any[]) => void) {
         const container = document.getElementById(containerId);
@@ -157,6 +162,32 @@ export class TableView {
                 height: 48px;
             }
 
+            .column-resizer {
+                position: absolute;
+                right: 0;
+                top: 0;
+                bottom: 0;
+                width: 4px;
+                background: transparent;
+                cursor: col-resize;
+                z-index: 10;
+            }
+
+            .column-resizer:hover,
+            .column-resizer.resizing {
+                background: #3b82f6;
+            }
+
+            .excel-table.resizing {
+                cursor: col-resize;
+                user-select: none;
+            }
+
+            .excel-table.resizing .excel-cell,
+            .excel-table.resizing .excel-header-cell {
+                cursor: col-resize;
+            }
+
             .excel-header-cell.sortable {
                 cursor: pointer;
             }
@@ -247,6 +278,7 @@ export class TableView {
                 background-color: #f8fafc;
             }
 
+            /* Scrollbar Styles */
             .excel-body-wrapper::-webkit-scrollbar {
                 width: 10px;
                 height: 10px;
@@ -354,8 +386,19 @@ export class TableView {
             filter.value = this.filters.get(column) || '';
             headerCell.appendChild(filter);
 
+            // Add column resizer
+            const resizer = document.createElement('div');
+            resizer.className = 'column-resizer';
+            resizer.dataset.column = column;
+            headerCell.appendChild(resizer);
+
             if (this.sortColumn === column) {
                 headerCell.classList.add(`sort-${this.sortDirection}`);
+            }
+
+            // Set initial width if configured
+            if (this.config.columnWidths?.[column]) {
+                headerCell.style.width = this.config.columnWidths[column];
             }
 
             header.appendChild(headerCell);
@@ -378,6 +421,12 @@ export class TableView {
                 cell.textContent = this.formatCellValue(row[column]);
                 cell.dataset.row = rowIndex.toString();
                 cell.dataset.column = column;
+
+                // Apply column width if configured
+                if (this.config.columnWidths?.[column]) {
+                    cell.style.width = this.config.columnWidths[column];
+                }
+
                 body.appendChild(cell);
             });
         });
@@ -391,22 +440,6 @@ export class TableView {
         this.bodyWrapper.addEventListener('scroll', () => {
             headerWrapper.scrollLeft = this.bodyWrapper.scrollLeft;
         });
-    }
-
-    private formatColumnName(column: string): string {
-        return column
-            .replace(/([A-Z])/g, ' $1')
-            .replace(/^./, str => str.toUpperCase());
-    }
-
-    private formatCellValue(value: any): string {
-        if (value instanceof Date) {
-            return value.toLocaleDateString();
-        }
-        if (typeof value === 'number') {
-            return value.toLocaleString();
-        }
-        return value?.toString() || '';
     }
 
     private attachEventListeners(): void {
@@ -438,6 +471,70 @@ export class TableView {
                 this.startEditing(target);
             }
         });
+
+        // Column resize events
+        this.table.querySelectorAll('.column-resizer').forEach(resizer => {
+            resizer.addEventListener('mousedown', this.startResize.bind(this));
+        });
+
+        document.addEventListener('mousemove', this.handleResize.bind(this));
+        document.addEventListener('mouseup', this.stopResize.bind(this));
+    }
+
+    private startResize(e: MouseEvent): void {
+        const resizer = e.target as HTMLElement;
+        const headerCell = resizer.parentElement as HTMLElement;
+        
+        this.isResizing = true;
+        this.currentResizer = resizer;
+        this.startX = e.pageX;
+        this.startWidth = headerCell.offsetWidth;
+        this.currentColumn = resizer.dataset.column || '';
+        
+        this.table.classList.add('resizing');
+        resizer.classList.add('resizing');
+
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    private handleResize(e: MouseEvent): void {
+        if (!this.isResizing) return;
+
+        const deltaX = e.pageX - this.startX;
+        const newWidth = Math.max(
+            parseInt(this.config.minColumnWidth || '150'),
+            this.startWidth + deltaX
+        );
+
+        // Update header cell width
+        const headerCells = this.table.querySelectorAll('.excel-header-cell');
+        const columnIndex = this.columns.indexOf(this.currentColumn);
+        const headerCell = headerCells[columnIndex] as HTMLElement;
+        headerCell.style.width = `${newWidth}px`;
+
+        // Update all body cells in the same column
+        const bodyCells = this.table.querySelectorAll(`.excel-cell[data-column="${this.currentColumn}"]`);
+        bodyCells.forEach((cell: Element) => {
+            (cell as HTMLElement).style.width = `${newWidth}px`;
+        });
+
+        // Update column width in config
+        if (!this.config.columnWidths) this.config.columnWidths = {};
+        this.config.columnWidths[this.currentColumn] = `${newWidth}px`;
+
+        e.preventDefault();
+    }
+
+    private stopResize(): void {
+        if (!this.isResizing) return;
+
+        this.isResizing = false;
+        this.table.classList.remove('resizing');
+        if (this.currentResizer) {
+            this.currentResizer.classList.remove('resizing');
+            this.currentResizer = null;
+        }
     }
 
     private startEditing(cell: HTMLElement): void {
@@ -476,6 +573,22 @@ export class TableView {
         if (!isNaN(Number(value))) return Number(value);
         if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return new Date(value);
         return value;
+    }
+
+    private formatColumnName(column: string): string {
+        return column
+            .replace(/([A-Z])/g, ' $1')
+            .replace(/^./, str => str.toUpperCase());
+    }
+
+    private formatCellValue(value: any): string {
+        if (value instanceof Date) {
+            return value.toLocaleDateString();
+        }
+        if (typeof value === 'number') {
+            return value.toLocaleString();
+        }
+        return value?.toString() || '';
     }
 
     private handleSort(column: string): void {
@@ -521,7 +634,7 @@ export class TableView {
     private exportToCsv(): void {
         const headers = this.columns.join(',');
         const rows = this.getFilteredData().map(row =>
-            this.columns.map(col => `"${row[col]}"`).join(',')
+            this.columns.map(col => `"${this.formatCellValue(row[col])}"`).join(',')
         );
 
         const csv = [headers, ...rows].join('\n');
