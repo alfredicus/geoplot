@@ -1,6 +1,7 @@
 // index.html
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,11 +12,13 @@
             overflow: hidden;
             background: #f0f0f0;
         }
+
         canvas {
             width: 100vw;
             height: 100vh;
             display: block;
         }
+
         #controls {
             position: fixed;
             top: 20px;
@@ -23,21 +26,25 @@
             background: rgba(255, 255, 255, 0.9);
             padding: 20px;
             border-radius: 8px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
         }
+
         .control-group {
             margin-bottom: 15px;
         }
+
         label {
             display: block;
             margin-bottom: 5px;
         }
+
         button {
             margin: 5px;
             padding: 5px 10px;
         }
     </style>
 </head>
+
 <body>
     <div id="controls">
         <div class="control-group">
@@ -63,12 +70,17 @@
             <button onclick="clearEquipotentialCurves()">Clear Equipotential</button>
         </div>
     </div>
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/examples/js/controls/OrbitControls.js"></script> -->
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.159.0/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.159.0/examples/js/controls/OrbitControls.js"></script>
+
     <script src="/dist/geoplot.js"></script>
 
+    
     <script type="module">
-        import * as THREE from '/node_modules/three/build/three.module.js';
-        import { OrbitControls } from '/node_modules/three/examples/jsm/controls/OrbitControls.js';
-        
+
         const geoplot = window["geoplot"]
 
         let scene, camera, renderer, controls, stressSphere;
@@ -126,30 +138,30 @@
         }
 
         // Expose functions to window for HTML controls
-        window.updateStressState = function() {
+        window.updateStressState = function () {
             const sigma1 = parseFloat(document.getElementById('sigma1').value);
             const sigma2 = parseFloat(document.getElementById('sigma2').value);
             const sigma3 = parseFloat(document.getElementById('sigma3').value);
             stressSphere.updateStressState(sigma1, sigma2, sigma3);
         };
 
-        window.addIntegralCurve = function() {
+        window.addIntegralCurve = function () {
             const theta = parseFloat(document.getElementById('theta').value);
             const phi = parseFloat(document.getElementById('phi').value);
             stressSphere.addIntegralCurve({ theta, phi });
         };
 
-        window.addEquipotentialCurve = function() {
+        window.addEquipotentialCurve = function () {
             const theta = parseFloat(document.getElementById('theta').value);
             const phi = parseFloat(document.getElementById('phi').value);
             stressSphere.addEquipotentialCurve({ theta, phi });
         };
 
-        window.clearIntegralCurves = function() {
+        window.clearIntegralCurves = function () {
             stressSphere.clearIntegralCurves();
         };
 
-        window.clearEquipotentialCurves = function() {
+        window.clearEquipotentialCurves = function () {
             stressSphere.clearEquipotentialCurves();
         };
 
@@ -166,4 +178,5 @@
         init();
     </script>
 </body>
+
 </html>

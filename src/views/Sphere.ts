@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+
 import { IntegralCurve, EquipotentialCurve } from '@alfredo-taboada/stress'
 
 interface Label {
