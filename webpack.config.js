@@ -6,6 +6,7 @@ const DESTINATION = path.resolve(__dirname, 'dist');
 
 module.exports = {
     context: ROOT,
+    mode: "development",
     entry: {
         'main': './index.ts'
     },

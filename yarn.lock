@@ -3,9 +3,9 @@
 
 
 "@alfredo-taboada/stress@^1.0.0":
-  version "1.0.0"
-  resolved "https://registry.npmjs.org/@alfredo-taboada/stress/-/stress-1.0.0.tgz"
-  integrity sha512-DjFGVQIfysaqZpAo0JDAaFhocYCOkFhxRk07y5VEmgB/Pv2ewodcS579H5lm6pTjFFue4wqTabtfciBj6JgGFQ==
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/@alfredo-taboada/stress/-/stress-1.1.0.tgz#5f830529d3c4d411ba60ff1d7f0bff90341db750"
+  integrity sha512-NLqxMpoBHoJJbxIt5UwOBmneQzjsHUqDrBf28LUoI75c2S5KQJU45UAYQTHiiWzkk4+WWXiZIDJQgTiI0ARWMg==
   dependencies:
     "@youwol/geometry" "^0.0.22"
     "@youwol/io" "^0.0.25-wip"
@@ -710,12 +710,12 @@
 
 "@youwol/geometry@^0.0.22":
   version "0.0.22"
-  resolved "https://registry.npmjs.org/@youwol/geometry/-/geometry-0.0.22.tgz"
+  resolved "https://registry.yarnpkg.com/@youwol/geometry/-/geometry-0.0.22.tgz#a8681cecaa7a9b45683c79789cc6ebc6dd2e3475"
   integrity sha512-1cPprYO0CHpvUUFO1y6qaOFROmIz6XTmjtogq/OSVx8G2nYHD/hXI7kFSV0kSpcdVC3LyTDMl5mRjVX3Yeo/1Q==
 
 "@youwol/io@^0.0.25-wip":
   version "0.0.25"
-  resolved "https://registry.npmjs.org/@youwol/io/-/io-0.0.25.tgz"
+  resolved "https://registry.yarnpkg.com/@youwol/io/-/io-0.0.25.tgz#e2c73f623c95a27a75eeea84ce708a876b851c20"
   integrity sha512-klzGVwpOvaUYZxXXQUbGLnoikaCP45Alctp1tZkhUhnw1jGt3e3tLmB11tO3WeJodoEpEcGS3v4uqVOQEeo2sw==
 
 accepts@~1.3.4, accepts@~1.3.5, accepts@~1.3.8:

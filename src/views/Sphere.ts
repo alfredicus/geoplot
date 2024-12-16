@@ -287,7 +287,7 @@ export class StressSphere {
 
         lines.forEach(line => {
             const parts = line.trim().split(/\s+/);
-            if (parts[0] === 'VRTX') {
+            if (parts[0] === 'VRTX' || parts[0] === 'PVRTX') {
                 points.push(new THREE.Vector3(
                     parseFloat(parts[2]),
                     parseFloat(parts[3]),
