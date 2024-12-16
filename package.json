@@ -13,8 +13,9 @@
         "rose": "http-server . -p 8001 -o /examples/index-rose-diagram.html",
         "table": "http-server . -p 8001 -o /examples/index-tableview3.html",
         "sphere": "http-server . -p 8001 -o /examples/index-sphere.html",
+        "simple": "http-server . -p 8001 -o /examples/simple.html",
         "zz": "-------------------------------------------------------------------",
-        "build": "webpack --mode production",
+        "build": "webpack --config webpack.config.js",
         "build:dev": "webpack --mode development",
         "doc": "npx typedoc src/index.ts"
     },
@@ -37,7 +38,7 @@
         "@alfredo-taboada/stress": "^1.0.0",
         "@types/three": "^0.170.0",
         "d3": "^7.9.0",
-        "three": "^0.170.0",
+        "three": "^0.171.0",
         "xlsx": "^0.18.5"
     }
 }

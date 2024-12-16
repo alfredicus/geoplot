@@ -144,7 +144,7 @@ export class StressSphere {
         const geometry = new THREE.SphereGeometry(this.radius, 64, 32);
         const material = new THREE.MeshPhongMaterial({
             color: 0xaaaaaa,
-            transparent: true,
+            transparent: false,
             opacity: 0.8
         });
 

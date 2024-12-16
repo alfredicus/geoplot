@@ -70,16 +70,23 @@
             <button onclick="clearEquipotentialCurves()">Clear Equipotential</button>
         </div>
     </div>
-    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/examples/js/controls/OrbitControls.js"></script> -->
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.159.0/three.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.159.0/examples/js/controls/OrbitControls.js"></script>
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "/node_modules/three/build/three.module.js",
+                "three/addons/": "/node_modules/three/examples/jsm/"
+            }
+        }
+    </script>
 
     <script src="/dist/geoplot.js"></script>
 
-    
+
     <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { TrackballControls } from 'three/addons/controls/TrackballControls.js';
 
         const geoplot = window["geoplot"]
 
@@ -103,13 +110,23 @@
             const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
             scene.add(ambientLight);
 
-            const pointLight = new THREE.PointLight(0xffffff, 1);
-            pointLight.position.set(5, 5, 5);
-            scene.add(pointLight);
+            {
+                const light1 = new THREE.DirectionalLight(0xffffff, 3);
+                light1.position.set(0, 200, 0);
+                scene.add(light1);
+
+                const light2 = new THREE.DirectionalLight(0xffffff, 3);
+                light2.position.set(100, 200, 100);
+                scene.add(light2);
+
+                const light3 = new THREE.DirectionalLight(0xffffff, 3);
+                light3.position.set(- 100, - 200, - 100);
+                scene.add(light3);
+            }
 
             // Controls
-            controls = new OrbitControls(camera, renderer.domElement);
-            controls.enableDamping = true;
+            controls = new TrackballControls(camera, renderer.domElement);
+            controls.enableDamping = false;
             controls.dampingFactor = 0.05;
 
             // Create stress sphere
