@@ -1,55 +1,64 @@
 # Geoplot
 
-Plotting tools for geologists based on [d3.js](https://d3js.org/)
+<center><img src="media/logo.png" alt="drawing" width="200"/></center>
 
-<center>
-    <img src="media/wulff.png" alt="drawing" width="200"/>
-    <img src="media/histogram.png" alt="drawing" width="300"/>
-    <img src="media/mohr.png" alt="drawing" width="200"/>
-    <img src="media/stress-domain.png" alt="drawing" width="200"/>
-    <img src="media/rose-diagram.png" alt="drawing" width="200"/>
-    <img src="media/table.png" alt="drawing" width="200"/>
-</center>
+Plotting tools for geologists based on [d3.js](https://d3js.org/) and [three.js](https://threejs.org/)
+
 
 ## Interactive tools
 
-### Wulff stereographic projection
-
-Launch it with the command
-```bash
-node run wulff
-```
-
-### Mohr circle in 3D
-Launch it with the command
-```bash
-node run mohr
-```
-
-### Histogram
+### 1. Histogram
+<img src="media/histogram.png" alt="drawing" width="300"/>
 
 Launch it with the command
 ```bash
 node run histogram
 ```
 
-### Stress domain (Anderson)
+### 2. Wulff stereographic projection
+<img src="media/wulff.png" alt="drawing" width="200"/>
+
+Launch it with the command
+```bash
+node run wulff
+```
+
+### 3. Mohr circle in 3D
+<img src="media/mohr.png" alt="drawing" width="200"/>
+
+Launch it with the command
+```bash
+node run mohr
+```
+
+### 4. Stress domain (Anderson)
+<img src="media/stress-domain.png" alt="drawing" width="200"/>
 
 Launch it with the command
 ```bash
 node run domain
 ```
 
-### Rose diagram
+### 5. Rose diagram
+<img src="media/rose-diagram.png" alt="drawing" width="200"/>
 
 Launch it with the command
 ```bash
 node run rose
 ```
 
-### Table
+### 6. Table
+<img src="media/table.png" alt="drawing" width="200"/>
 
 Launch it with the command
 ```bash
 node run table
+```
+
+### 7. Sphere
+<img src="media/sphere.png" alt="drawing" width="200"/>
+
+Launch it with the command
+```bash
+node run sphere
 ```
